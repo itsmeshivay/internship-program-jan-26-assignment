@@ -46,7 +46,173 @@ You need to put your solution here.
 
 You need to put your solution here.
 
----
+
+My Understanding of the System
+
+In this platform, a user uploads a video and the backend processes it to generate a summary, highlights with timestamps, and some assets. Since video processing can take time, the most important part from a frontend perspective is handling long-running jobs properly and keeping the user informed about what is happening.
+
+My main goal would be to make the experience clear and predictable so the user never feels confused.
+
+Screens Design
+1. Upload Screen
+
+On this screen, I would include:
+
+Drag and drop video upload area
+
+File validation (file type and size limit)
+
+Upload progress bar
+
+“Start Processing” button
+
+Once the upload is complete and the job is created, I would redirect the user to the Job Detail page instead of keeping them on the upload screen. This makes more sense because processing can take time.
+
+2. Jobs List Screen
+
+This screen would show all previously uploaded jobs.
+
+Each job row would contain:
+
+Video name
+
+Status (Queued / Processing / Success / Failed)
+
+Created time
+
+A button to view details
+
+I would use color-coded badges for status so users can quickly understand the state of each job.
+
+3. Job Detail Screen
+
+This is the most important screen because this is where the user tracks progress.
+
+It would include:
+
+Current status badge
+
+Progress bar (if the backend provides percentage)
+
+A logs section (collapsible)
+
+Retry button (if the job fails)
+
+Cancel option (if still processing)
+
+If partial results are available (for example, summary is ready but highlights are still generating), I would show the available content immediately instead of waiting for everything to complete.
+
+I think showing partial output improves user trust.
+
+4. Results Screen
+
+When the job is completed successfully, I would show:
+
+Markdown preview of the summary
+
+Highlights with clickable timestamps
+
+Download buttons (Summary.md and all assets as ZIP)
+
+While rendering markdown, I would make sure to sanitize the content to prevent any XSS issues.
+
+UI States Handling
+
+I would handle the following states:
+
+loading
+
+queued
+
+processing
+
+partial output
+
+success
+
+failed
+
+During processing, action buttons would be disabled to prevent duplicate requests.
+
+If the user refreshes the page, the current job state should be restored instead of resetting.
+
+API Calling Strategy
+
+Since this is a long-running task, I would use polling by default.
+
+After creating the job, I would:
+
+Poll the job status every 5 seconds
+
+Stop polling when the job reaches success or failed state
+
+Use AbortController to stop polling if the user navigates away
+
+If the backend supports Server-Sent Events (SSE), I would prefer using that for real-time updates. But polling would be my initial implementation because it is simpler and reliable.
+
+For error handling:
+
+Retry failed network requests up to 3 times
+
+Use exponential backoff
+
+Show user-friendly error messages
+
+Caching Strategy
+
+To balance performance and data freshness, I would:
+
+Cache:
+
+Job list (short TTL, around 30 seconds)
+
+Job detail (short TTL if processing)
+
+Final results (longer TTL, around 24 hours)
+
+I would use in-memory caching for fast updates and possibly IndexedDB for storing completed results.
+
+If the job status changes, I would invalidate the job detail cache to avoid stale UI.
+
+Debugging & Observability
+
+If a job appears stuck in processing, from the frontend side I would:
+
+Check network polling frequency
+
+Display correlation ID in the UI
+
+Show last API response timestamp
+
+Log errors centrally
+
+I would also add a small “Report Issue” button that sends:
+
+Job ID
+
+Correlation ID
+
+Browser information
+
+Current job status
+
+This would help the support team debug issues faster.
+
+Final Thoughts
+
+For this platform, I believe the most important part is handling async jobs in a clear and reliable way.
+
+The frontend should:
+
+Clearly show job status
+
+Handle retries safely
+
+Avoid stale data
+
+Show partial results when possible
+
+My focus would be on making the async experience feel transparent and trustworthy for the user.
 
 ## **Problem 3: DOCX Template → Bulk Generator (Frontend System Design)**
 
